@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: nodeserver
-        image: anupam2002us/nodeapp:latest
+        image: thetips4you/nodeapp:latest
         ports:
         - containerPort: 3000
         
@@ -35,3 +35,4 @@ spec:
   - protocol: TCP
     port: 5000
     targetPort: 3000
+    nodePort: 31110
