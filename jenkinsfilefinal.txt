@@ -1,0 +1,66 @@
+Finanl pipeline :--- I create one extra file in github, name “jenkinsfilefinal”
+
+pipeline {
+    agent any
+
+    environment {
+        dockerimagename = "anupam2002us/nodeapp"
+        dockerImage = ""
+    }
+
+    stages {
+
+        stage('Checkout Source') {
+            steps {
+                git 'https://github.com/anupam02us/nodeapp_test.git'
+            }
+        }
+
+        stage('Build Image') {
+            steps {
+                script {
+                    dockerImage = docker.build(dockerimagename)
+                }
+            }
+        }
+
+        stage('Pushing Image') {
+            steps {
+                script {
+                    withDockerRegistry(
+                        credentialsId: '8573e521-f729-4cd5-bb59-ccaa78e5a77f',
+                        url: 'https://index.docker.io/v1/'
+                    ) {
+                        dockerImage.push("latest")
+                    }
+                }
+            }
+        }    
+        
+        stage('Deploying App to Kubernetes') {
+        steps {
+        withCredentials([file(credentialsId: 'kubernetes', variable: 'KUBECONFIG')]) {
+            sh '''
+                export KUBECONFIG=$KUBECONFIG
+                kubectl delete -f deploymentservice.yml
+                kubectl apply -f deploymentservice.yml
+                echo " deployed in Loadbalancer"
+                sleep 10
+                echo "deploy, pod, svc"
+                kubectl get deploy
+                kubectl get pods
+                kubectl get svc
+            '''
+            }
+          }
+        }  
+            stage('Clean Workspace') {
+                steps {
+                sh '''
+                find "$WORKSPACE" -mindepth 1 -delete
+                '''
+                }
+        }
+
+    }
+}
